@@ -3,10 +3,12 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const cors = require('cors');
+const fileUpload = require('express-fileupload')
 const ObjectId = require('mongodb').ObjectID;
 
 const app = express();
 app.use(bodyParser.json());
+app.use(fileUpload())
 app.use(cors());
 const port = 5000
 
@@ -21,13 +23,6 @@ client.connect(err => {
   const ordersDb = client.db("creative-agency-new-db").collection("orders");
   console.log('database connected');
 
-  // app.post('/addTask', (req, res) => {
-  //   const task = req.body;
-  //   taskCollection.insertOne(task)
-  //     .then(result => { 
-  //       // res.send (result.insertedCount) 
-  //     })
-  // })
 
 
   app.get('/feedback', (req, res) => {
@@ -50,57 +45,54 @@ client.connect(err => {
         res.send(documents);
       })
   })
+  app.get('/orders', (req, res) => {
+    ordersDb.find({})
+      .toArray((err, documents) => {
+        res.send(documents);
+      })
+  })
 
-  // app.post('/addOrder', (req, res) => {
-  //   const file = req.files.file;
-  //   const name = req.body.name;
-  //   const email = req.body.email;
-  //   const heading = req.body.heading;
-  //   const details = req.body.details;
-  //   const price = req.body.price;
 
-  //   console.log(file, name);
+//   app.post('/addOrder', (req, res) => {
+//     const file = req.files.file;
+//     const name = req.body.name;
+//     const email = req.body.email;
+//     const heading = req.body.heading;
+//     const details = req.body.details;
+//     const price = req.body.price;
+//     const newImg = file.data;
+//     const encImg = newImg.toString('base64');
 
-  //   file.mv(`${__dirname}/addOrderImage/${file.name}`, err = () => {
-  //     if (err) {
-  //       console.log(err);
-  //       return res.status(500).send({ msg: 'failed to upload image' })
-  //     }
-  //     return res.send({ name: file.name, path: `/${file.path}` })
-  //   })
-  // })
-  app.post('/addOrder', (req, res) => {
-    const file = req.files.file;
-    const name = req.body.name;
-    const email = req.body.email;
-    const heading = req.body.heading;
-    const details = req.body.details;
-    const price = req.body.price;
-    const newImg = file.data;
-    const encImg = newImg.toString('base64');
+//     var image = {
+//         contentType: file.mimetype,
+//         size: file.size,
+//         img: Buffer.from(encImg, 'base64')
+//     };
 
-    var image = {
-        contentType: file.mimetype,
-        size: file.size,
-        img: Buffer.from(encImg, 'base64')
-    };
-
-    ordersDb.insertOne({ name, email, heading, details, price, image })
-        .then(result => {
-            res.send(result.insertedCount > 0);
-        })
+//     ordersDb.insertOne({ name, email, heading, details, price, image })
+//         .then(result => {
+//             res.send(result.insertedCount > 0);
+//         })
+// })
+app.post('/addOrder', (req, res) => {
+  const file = req.files.file
+  const encImg = file.data.toString('base64')
+  const image = {
+      contentType: file.mimetype,
+      size: file.size,
+      img: Buffer.from(encImg, 'base64')
+  }
+  const { name, details, email, heading, price } = req.body
+  ordersDb.insertOne({ name, details, email, heading, price, image })
+      .then(result => {
+          return res.send(result.insertedCount > 0)
+      })
 })
 
 
 
 
-  // app.delete ('/deleteItem/:id', (req, res) => {
-  //   console.log(req.params.id);
-  //   taskCollection.deleteOne({_id: ObjectId(req.params.id)})
-  //   .then (( result) => {
-  //     console.log(result);
-  //   })
-  // })
+
 
 
 });
@@ -110,3 +102,20 @@ app.get('/', (req, res) => {
 })
 
 app.listen(process.env.PORT || port)
+
+
+
+// app.post('/addOrder', (req, res) => {
+//   const file = req.files.file
+//   const encImg = file.data.toString('base64')
+//   const image = {
+//       contentType: file.mimetype,
+//       size: file.size,
+//       img: Buffer.from(encImg, 'base64')
+//   }
+//   const { name, detail, email, work, price, status } = req.body
+//   orderCollection.insertOne({ name, detail, email, status, work, price, image })
+//       .then(result => {
+//           return res.send(result.insertedCount > 0)
+//       })
+// })
